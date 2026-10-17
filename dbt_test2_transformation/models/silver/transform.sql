@@ -7,6 +7,7 @@ SELECT
     quantity,
     Unit_Price_INR,
     Net_Sales_INR,
+    Profit_INR,
     UPPER(TRIM(Payment_Method)) AS Payment_Method,
     Region,
     City,
