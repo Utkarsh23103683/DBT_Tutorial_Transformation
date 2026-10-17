@@ -1,0 +1,7 @@
+sources:
+    - name: raw
+      description: "This is the raw source data for DBT Test2."
+      database: catalog_test2_dbt
+      schema: bronze
+      tables:
+        - name: sales_data
