@@ -10,6 +10,11 @@ jobs:
     dbt-test:
         runs-on: ubuntu-latest
 
+        env:
+          DATABRICKS_TOKEN: ${{ secrets.DBT_DATABRICKS_TOKEN }}
+          DATABRICKS_HOST: ${{ secrets.DBT_DATABRICKS_HOST }}
+          DATABRICKS_HTTP_PATH: ${{ secrets.DBT_DATABRICKS_HTTP_PATH }}
+
         steps: 
             - name: Checkout repository
               uses: actions/checkout@v4
