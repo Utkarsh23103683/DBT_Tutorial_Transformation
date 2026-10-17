@@ -1,0 +1,64 @@
+name: dbt CI
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+jobs:
+    dbt-test:
+        runs-on: ubuntu-latest
+
+        steps: 
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install Python
+              uses: actions/setup-python@v5
+              with:
+                python-version: '3.11'
+
+            - name: Install uv
+              uses: astral-sh/setup-uv@v5
+
+            - name: Install project dependencies
+              run: uv sync --locked
+
+            - name: Configure dbt profile
+              env: 
+                DATABRICKS_TOKEN: ${{ secrets.DBT_DATABRICKS_TOKEN }}
+                DATABRICKS_HOST: ${{ secrets.DBT_DATABRICKS_HOST }}
+                DATABRICKS_HTTP_PATH: ${{ secrets.DBT_DATABRICKS_HTTP_PATH }}
+              run: |
+                mkdir -p ~/.dbt
+                cat > ~/.dbt/profiles.yml <<'EOF'
+                dbt_test2_transformation:
+                    target: dev
+                    outputs:
+                        dev:
+                            type: databricks
+                            auth_type: token
+                            host: "{{ env_var('DATABRICKS_HOST') }}"
+                            http_path: "{{ env_var('DATABRICKS_HTTP_PATH') }}"
+                            token: "{{ env_var('DATABRICKS_TOKEN') }}"
+                            catalog: catalog_test2_dbt
+                            schema: silver
+                            threads: 1
+                EOF
+
+            - name: Check dbt connection
+              working-directory: dbt_test2_transformation
+              run: uv run --project .. dbt debug
+
+            - name: Install dbt dependencies
+              working-directory: dbt_test2_transformation
+              run: uv run --project .. dbt deps
+
+            - name: Compile dbt models
+              working-directory: dbt_test2_transformation
+              run: uv run --project .. dbt compile
+
+            - name: Run dbt models and tests
+              working-directory: dbt_test2_transformation
+              run: uv run --project .. dbt build
